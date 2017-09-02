@@ -112,6 +112,17 @@ app.put('/todos/:id', (req, res) => {
     });
 });
 
+app.post('/users', (req, res) => {
+    const allowedKeys = ['email', 'password'];
+    var body =  _.pick(req.body, allowedKeys);
+
+    db.user.create(body).then((user) => {
+        res.json(user.toJSON());
+    },(e) => {
+        res.status(400).json(e);
+    });
+});
+
 db.sequelize.sync().then(() => {
     app.listen(PORT, () => {
         console.log('Express listening on PORT ' + PORT + '!');
