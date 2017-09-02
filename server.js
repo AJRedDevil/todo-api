@@ -85,32 +85,31 @@ app.delete('/todos/:id', (req, res) => {
 // PUT /todos/:id
 app.put('/todos/:id', (req, res) => {
     var todoId = parseInt(req.params.id, 10);
-    var matchedTodo = _.findWhere(todos, {id: todoId});
     const allowedKeys = ['description', 'completed'];
     var body =  _.pick(req.body, allowedKeys);
-    var validAttributes = {};
+    var attributes = {};
 
-    if (!matchedTodo) {
-        return res.status(404).send({"error": "no todo found with that id"});
-    }
-    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-        validAttributes.completed = body.completed;
-    } else if (body.hasOwnProperty('completed')){
-        return res.status(400).send();
-    } else {
-        // Never provided atribute, no problem here
+    if (body.hasOwnProperty('completed')) {
+        attributes.completed = body.completed;
     }
 
-    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-        validAttributes.description = body.description.trim();
-    } else if (body.hasOwnProperty('description')){
-        return res.status(400).send();
-    } else {
-        // Never provided atribute, no problem here
+    if (body.hasOwnProperty('description')) {
+        attributes.description = body.description.trim();
     }
 
-    _.extend(matchedTodo, validAttributes); // objects in JS passed by reference
-    res.json(matchedTodo);
+    db.todo.findById(todoId).then((todo) => {
+        if (todo) {
+            todo.update(attributes).then((todo) => {
+                res.json(todo.toJSON());
+            },(e) => {
+                res.status(400).send(e);
+            });
+        } else {
+            res.status(400).send();
+        }
+    }, () => {
+        res.status(500).send();
+    });
 });
 
 db.sequelize.sync().then(() => {
