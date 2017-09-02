@@ -15,7 +15,16 @@ app.get('/', (req, res) => {
 
 // GET /todos
 app.get('/todos', (req, res) => {
-    res.json(todos);
+    var queryParams = req.query;
+    var filteredTodos = todos;
+
+    if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'true') {
+        filteredTodos = _.where(filteredTodos, {completed: true});
+    } else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
+        filteredTodos = _.where(filteredTodos, {completed: false});
+    }
+    
+    res.json(filteredTodos);
 });
 
 // GET /todos/:id
@@ -79,7 +88,7 @@ app.put('/todos/:id', (req, res) => {
         // Never provided atribute, no problem here
     }
 
-    if (body.hasOwnProperty('desription') && _.isString(body.description) && body.description.trim().length > 0) {
+    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
         validAttributes.description = body.description.trim();
     } else if (body.hasOwnProperty('description')){
         return res.status(400).send();
