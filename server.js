@@ -2,7 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db');
-var bcrypt = require('bcrypt');
+var middleware = require('./middleware')(db);
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -14,7 +14,7 @@ app.get('/', (req, res) => {
 })
 
 // GET /todos
-app.get('/todos', (req, res) => {
+app.get('/todos', middleware.requireAuthentication, (req, res) => {
     var query = req.query;
     var where = {};
 
@@ -38,7 +38,7 @@ app.get('/todos', (req, res) => {
 });
 
 // GET /todos/:id
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', middleware.requireAuthentication, (req, res) => {
     var todoId = parseInt(req.params.id, 10);
     db.todo.findById(todoId).then((todo) => {
         if (!!todo) {
@@ -52,7 +52,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // POST /todos
-app.post('/todos', (req, res) => {
+app.post('/todos', middleware.requireAuthentication, (req, res) => {
     const allowedKeys = ['description', 'completed'];
     var body =  _.pick(req.body, allowedKeys);
 
@@ -64,7 +64,7 @@ app.post('/todos', (req, res) => {
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', middleware.requireAuthentication, (req, res) => {
     var todoId = parseInt(req.params.id, 10);
 
     db.todo.destroy({where:{
@@ -83,7 +83,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 // PUT /todos/:id
-app.put('/todos/:id', (req, res) => {
+app.put('/todos/:id', middleware.requireAuthentication, (req, res) => {
     var todoId = parseInt(req.params.id, 10);
     const allowedKeys = ['description', 'completed'];
     var body =  _.pick(req.body, allowedKeys);
