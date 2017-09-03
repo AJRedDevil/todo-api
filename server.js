@@ -5,7 +5,6 @@ var db = require('./db');
 
 var app = express();
 var PORT = process.env.PORT || 3000;
-var todos = [];
 
 app.use(bodyParser.json());
 
@@ -117,13 +116,13 @@ app.post('/users', (req, res) => {
     var body =  _.pick(req.body, allowedKeys);
 
     db.user.create(body).then((user) => {
-        res.json(user.toJSON());
+        res.json(user.toPublicJSON());
     },(e) => {
         res.status(400).json(e);
     });
 });
 
-db.sequelize.sync().then(() => {
+db.sequelize.sync({force: true}).then(() => {
     app.listen(PORT, () => {
         console.log('Express listening on PORT ' + PORT + '!');
     });    
