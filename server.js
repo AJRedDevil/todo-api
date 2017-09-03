@@ -145,18 +145,33 @@ app.post('/users', (req, res) => {
 app.post('/users/login', (req, res) => {
     const allowedKeys = ['email', 'password'];
     var body =  _.pick(req.body, allowedKeys);
+    var userInstance;
 
     db.user.authenticate(body).then((user) => {
         var token = user.generateToken('authentication');
-        if (token) {
-            res.header('Auth', token).json(user.toPublicJSON());
-        } else {
-            res.status(401).send();
-        }
-    }, () => {
+        userInstance = user;
+
+        console.log('token');
+        console.log(token);
+        return db.token.create({
+            token: token
+        });
+    }).then((tokenInstance) => {
+        res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+    }).catch((e) =>  {
+        console.log(e);
         res.status(401).send();
     })
 });
+
+// DELETE /users/login
+app.delete('/users/login', middleware.requireAuthentication, (req, res) => {
+    req.token.destroy().then(() => {
+        res.status(204).send();
+    }, () => {
+        res.status(500).send();
+    })
+})
 
 db.sequelize.sync({force: true}).then(() => {
     app.listen(PORT, () => {
